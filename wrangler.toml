@@ -1,0 +1,4 @@
+name = "ali-search-api"
+main = "src/index.js"
+compatibility_date = "2024-03-20"
+compatibility_flags = ["nodejs_compat"]
