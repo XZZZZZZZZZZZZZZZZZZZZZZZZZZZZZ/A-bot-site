@@ -3,239 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מנוע דילים - עליאקספרס</title>
+    <title>Ali-Bot | מנוע הדילים החכם</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f4f7f6; 
-            margin: 0; 
-            padding: 20px; 
-        }
-        .container { 
-            max-width: 1200px; 
-            margin: auto; 
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 30px;
-        }
-        .search-box { 
-            display: flex; 
-            justify-content: center; 
-            margin-bottom: 40px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-radius: 25px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        input[type="text"] { 
-            padding: 15px 20px; 
-            width: 100%; 
-            border: 1px solid #ddd; 
-            border-radius: 0 25px 25px 0; 
-            font-size: 18px; 
-            outline: none; 
-            border-left: none;
-        }
-        button { 
-            padding: 15px 40px; 
-            border: none; 
-            background: #ff4747; 
-            color: white; 
-            border-radius: 25px 0 0 25px; 
-            cursor: pointer; 
-            font-size: 18px; 
-            font-weight: bold;
-            transition: background 0.3s; 
-        }
-        button:hover { 
-            background: #e03e3e; 
-        }
-        .results { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-            gap: 25px; 
-        }
-        .card { 
-            background: white; 
-            border-radius: 15px; 
-            overflow: hidden; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-            transition: transform 0.2s, box-shadow 0.2s; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        .card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        .card img { 
-            width: 100%; 
-            height: 250px; 
-            object-fit: cover; 
-            border-bottom: 1px solid #eee;
-        }
-        .card-content { 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            flex-grow: 1; 
-        }
-        .card-title { 
-            font-size: 16px; 
-            margin: 0 0 15px; 
-            color: #444; 
-            line-height: 1.4;
-            display: -webkit-box; 
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical; 
-            overflow: hidden; 
-        }
-        .card-price { 
-            font-size: 24px; 
-            font-weight: bold; 
-            color: #ff4747; 
-            margin-bottom: 20px; 
-        }
-        .buy-btn { 
-            background: #ff4747; 
-            color: white; 
-            text-align: center; 
-            padding: 12px; 
-            border-radius: 8px; 
-            text-decoration: none; 
-            font-weight: bold; 
-            font-size: 16px;
-            margin-top: auto; 
-            transition: background 0.3s;
-        }
-        .buy-btn:hover { 
-            background: #e03e3e; 
-        }
-        .load-more { 
-            display: none; 
-            margin: 40px auto; 
-            padding: 15px 40px; 
-            background: #333; 
-            color: white; 
-            border-radius: 25px; 
-            border: none; 
-            cursor: pointer; 
-            font-size: 18px; 
-            text-align: center; 
-        }
-        .load-more:hover { 
-            background: #555; 
-        }
-        .loader { 
-            text-align: center; 
-            display: none; 
-            font-size: 20px; 
-            font-weight: bold;
-            color: #ff4747; 
-            margin: 40px 0; 
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; }
+        .product-card { transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-8px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>מנוע חיפוש הדילים שלי 🛒</h1>
-        
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="מה תרצה לחפש היום? (לדוגמה: אוזניות)">
-            <button onclick="searchProducts(true)">חפש</button>
+
+    <nav class="bg-white shadow-sm p-4 sticky top-0 z-50 border-b border-gray-100">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-6">
+                <div id="logo" class="text-2xl font-black text-orange-600 tracking-tighter">ALI-BOT</div>
+                <ul class="hidden md:flex gap-6 text-gray-600 font-bold text-sm">
+                    <li><a href="#" class="hover:text-orange-600 transition">ראשי</a></li>
+                    <li><a href="#" id="admin-link" class="hidden text-red-500 border-r pr-4">פאנל ניהול</a></li>
+                </ul>
+            </div>
+            <div id="auth-section">
+                <button onclick="loginWithGoogle()" class="bg-gray-50 border border-gray-200 px-5 py-2 rounded-full flex items-center gap-2 hover:bg-white hover:shadow-sm transition text-sm font-bold">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16">
+                    <span>התחבר עם גוגל</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-[#1a1a1a] py-20 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+        <div class="max-w-3xl mx-auto text-center relative z-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4">הדילים הכי חזקים בעליאקספרס</h1>
+            <p class="text-orange-400 text-lg mb-8 font-medium">חיפוש חכם מהנמכרים ביותר בלבד 🔥</p>
+            
+            <div class="relative group">
+                <input type="text" id="searchInput" placeholder="מה בא לך למצוא? (למשל: רמקול, מטען, גיימינג)" 
+                       class="w-full p-6 rounded-2xl shadow-2xl outline-none text-xl pr-8 pl-24 border-4 border-transparent focus:border-orange-500 transition-all">
+                <button onclick="searchProducts(true)" 
+                        class="absolute left-3 top-3 bottom-3 bg-orange-600 text-white px-10 rounded-xl hover:bg-orange-500 transition-all font-black text-lg shadow-lg">
+                    חפש
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto py-12 px-4">
+        <div id="loader" class="hidden text-center py-32">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-600"></div>
+            <p class="mt-6 text-gray-500 font-bold text-xl animate-pulse">מושך נתונים מעליאקספרס...</p>
         </div>
 
-        <div class="loader" id="loader">מחפש את הדילים השווים ביותר... ⏳</div>
-        
-        <div class="results" id="results"></div>
-        
-        <button class="load-more" id="loadMoreBtn" onclick="searchProducts(false)">הצג עוד 10 תוצאות</button>
-    </div>
+        <div id="results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            </div>
+
+        <div id="pagination" class="hidden text-center mt-20">
+            <button id="loadMoreBtn" onclick="searchProducts(false)" 
+                    class="bg-white border-2 border-orange-600 text-orange-600 px-12 py-4 rounded-2xl font-black hover:bg-orange-600 hover:text-white transition-all shadow-md">
+                הצג תוצאות נוספות <i class="fa-solid fa-plus mr-2"></i>
+            </button>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-100 py-10 mt-20 text-center">
+        <div class="container mx-auto px-4">
+            <div class="text-orange-600 font-black text-xl mb-4">ALI-BOT</div>
+            <p class="text-gray-400 text-sm">המערכת סורקת מוצרים בעלי דירוג גבוה בלבד. הרכישה מתבצעת באתר עליאקספרס.</p>
+        </div>
+    </footer>
 
     <script>
-        // הכנס כאן את כתובת השרת שלך מקלאודפלייר!
-        const WORKER_URL = "https://YOUR-WORKER-URL.workers.dev";
+        // הכתובת של השרת שלך - מוזנת מראש!
+        const WORKER_URL = "https://atr.tzv055678.workers.dev";
         
         let currentPage = 1;
         let currentQuery = "";
 
-        // מאפשר חיפוש בלחיצה על כפתור האנטר במקלדת
-        document.getElementById("searchInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                searchProducts(true);
-            }
-        });
-
         async function searchProducts(isNewSearch) {
             const input = document.getElementById('searchInput').value.trim();
-            if (!input) return alert("אנא הזן מילת חיפוש");
+            if (!input) return;
 
             if (isNewSearch) {
                 currentPage = 1;
                 currentQuery = input;
                 document.getElementById('results').innerHTML = "";
-                document.getElementById('loadMoreBtn').style.display = "none";
+                document.getElementById('pagination').classList.add('hidden');
             } else {
                 currentPage++;
             }
 
-            document.getElementById('loader').style.display = "block";
+            document.getElementById('loader').classList.remove('hidden');
 
             try {
-                // קריאה לשרת שיצרנו בקלאודפלייר
-                const response = await fetch(`${WORKER_URL}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`);
+                const url = `${WORKER_URL}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`;
+                const response = await fetch(url);
                 const products = await response.json();
                 
-                document.getElementById('loader').style.display = "none";
+                document.getElementById('loader').classList.add('hidden');
 
-                if (products.length === 0) {
+                if (!products || products.length === 0) {
                     if (isNewSearch) {
-                        document.getElementById('results').innerHTML = "<h3 style='text-align:center; width:100%; color:#666;'>לא נמצאו תוצאות, נסה לחפש מילה אחרת.</h3>";
-                    } else {
-                        document.getElementById('loadMoreBtn').style.display = "none";
+                        document.getElementById('results').innerHTML = `
+                            <div class="col-span-full text-center py-20">
+                                <i class="fa-solid fa-magnifying-glass text-5xl text-gray-200 mb-4"></i>
+                                <p class="text-gray-500 text-xl font-bold">לא מצאנו תוצאות למילה "${currentQuery}"</p>
+                            </div>`;
                     }
                     return;
                 }
 
-                renderProducts(products);
-                
-                // מציג את כפתור ה"הצג עוד" רק אם קיבלנו תוצאות
-                document.getElementById('loadMoreBtn').style.display = "block"; 
-            } catch (error) {
-                document.getElementById('loader').style.display = "none";
-                alert("אופס! משהו השתבש בחיבור לשרת. ודא שהכתובת בקוד מדויקת.");
+                renderItems(products);
+                document.getElementById('pagination').classList.remove('hidden');
+            } catch (e) {
+                document.getElementById('loader').classList.add('hidden');
+                alert("יש שגיאה בחיבור לשרת. בדוק שה-Worker פעיל.");
             }
         }
 
-        function renderProducts(products) {
-            const resultsDiv = document.getElementById('results');
+        function renderItems(products) {
+            const grid = document.getElementById('results');
             products.forEach(p => {
-                const title = p.product_title || "מוצר מעליאקספרס";
-                const img = p.product_main_image_url;
-                // משיכת מחיר, אם אין sale_price ננסה למשוך app_sale_price
-                let priceStr = p.target_app_sale_price || p.app_sale_price || p.target_sale_price || "";
-                // חיתוך טווח מחירים אם יש (לדוגמה 10-20 ש"ח) ומציג רק את המחיר ההתחלתי
-                priceStr = priceStr.toString().split("-")[0].trim();
-                const link = p.promotion_link;
-
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <img src="${img}" alt="Product Image">
-                    <div class="card-content">
-                        <h3 class="card-title" title="${title}">${title}</h3>
-                        <div class="card-price">₪${priceStr}</div>
-                        <a href="${link}" target="_blank" class="buy-btn">לקנייה בהנחה</a>
+                const price = (p.target_app_sale_price || p.target_sale_price || "0").toString().split("-")[0];
+                const card = `
+                    <div class="product-card bg-white rounded-3xl p-4 border border-gray-50 flex flex-col shadow-sm">
+                        <div class="relative mb-4">
+                            <img src="${p.product_main_image_url}" class="w-full h-48 object-cover rounded-2xl">
+                            <div class="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm">
+                                ${p.sale_volume || '0'}+ נמכרו
+                            </div>
+                        </div>
+                        <h3 class="text-gray-700 font-bold text-xs mb-3 line-clamp-2 h-8 leading-tight">${p.product_title}</h3>
+                        <div class="flex items-center justify-between mt-auto">
+                            <div class="text-xl font-black text-orange-600">₪${price}</div>
+                            <a href="${p.promotion_link}" target="_blank" class="bg-gray-900 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-orange-600 transition-colors">
+                                <i class="fa-solid fa-cart-shopping text-sm"></i>
+                            </a>
+                        </div>
                     </div>
                 `;
-                resultsDiv.appendChild(card);
+                grid.innerHTML += card;
             });
         }
+
+        function loginWithGoogle() {
+            alert("המערכת מתחברת ל-Firebase... כבר מעדכן אותך!");
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') searchProducts(true);
+        });
     </script>
 </body>
 </html>
