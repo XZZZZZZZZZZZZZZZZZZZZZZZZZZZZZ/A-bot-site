@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מנוע דילים - עליאקספרס</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f4f7f6; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: auto; 
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        .search-box { 
+            display: flex; 
+            justify-content: center; 
+            margin-bottom: 40px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 25px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        input[type="text"] { 
+            padding: 15px 20px; 
+            width: 100%; 
+            border: 1px solid #ddd; 
+            border-radius: 0 25px 25px 0; 
+            font-size: 18px; 
+            outline: none; 
+            border-left: none;
+        }
+        button { 
+            padding: 15px 40px; 
+            border: none; 
+            background: #ff4747; 
+            color: white; 
+            border-radius: 25px 0 0 25px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: bold;
+            transition: background 0.3s; 
+        }
+        button:hover { 
+            background: #e03e3e; 
+        }
+        .results { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            gap: 25px; 
+        }
+        .card { 
+            background: white; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+            transition: transform 0.2s, box-shadow 0.2s; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .card img { 
+            width: 100%; 
+            height: 250px; 
+            object-fit: cover; 
+            border-bottom: 1px solid #eee;
+        }
+        .card-content { 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            flex-grow: 1; 
+        }
+        .card-title { 
+            font-size: 16px; 
+            margin: 0 0 15px; 
+            color: #444; 
+            line-height: 1.4;
+            display: -webkit-box; 
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical; 
+            overflow: hidden; 
+        }
+        .card-price { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #ff4747; 
+            margin-bottom: 20px; 
+        }
+        .buy-btn { 
+            background: #ff4747; 
+            color: white; 
+            text-align: center; 
+            padding: 12px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 16px;
+            margin-top: auto; 
+            transition: background 0.3s;
+        }
+        .buy-btn:hover { 
+            background: #e03e3e; 
+        }
+        .load-more { 
+            display: none; 
+            margin: 40px auto; 
+            padding: 15px 40px; 
+            background: #333; 
+            color: white; 
+            border-radius: 25px; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 18px; 
+            text-align: center; 
+        }
+        .load-more:hover { 
+            background: #555; 
+        }
+        .loader { 
+            text-align: center; 
+            display: none; 
+            font-size: 20px; 
+            font-weight: bold;
+            color: #ff4747; 
+            margin: 40px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מנוע חיפוש הדילים שלי 🛒</h1>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="מה תרצה לחפש היום? (לדוגמה: אוזניות)">
+            <button onclick="searchProducts(true)">חפש</button>
+        </div>
+
+        <div class="loader" id="loader">מחפש את הדילים השווים ביותר... ⏳</div>
+        
+        <div class="results" id="results"></div>
+        
+        <button class="load-more" id="loadMoreBtn" onclick="searchProducts(false)">הצג עוד 10 תוצאות</button>
+    </div>
+
+    <script>
+        // הכנס כאן את כתובת השרת שלך מקלאודפלייר!
+        const WORKER_URL = "https://YOUR-WORKER-URL.workers.dev";
+        
+        let currentPage = 1;
+        let currentQuery = "";
+
+        // מאפשר חיפוש בלחיצה על כפתור האנטר במקלדת
+        document.getElementById("searchInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                searchProducts(true);
+            }
+        });
+
+        async function searchProducts(isNewSearch) {
+            const input = document.getElementById('searchInput').value.trim();
+            if (!input) return alert("אנא הזן מילת חיפוש");
+
+            if (isNewSearch) {
+                currentPage = 1;
+                currentQuery = input;
+                document.getElementById('results').innerHTML = "";
+                document.getElementById('loadMoreBtn').style.display = "none";
+            } else {
+                currentPage++;
+            }
+
+            document.getElementById('loader').style.display = "block";
+
+            try {
+                // קריאה לשרת שיצרנו בקלאודפלייר
+                const response = await fetch(`${WORKER_URL}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`);
+                const products = await response.json();
+                
+                document.getElementById('loader').style.display = "none";
+
+                if (products.length === 0) {
+                    if (isNewSearch) {
+                        document.getElementById('results').innerHTML = "<h3 style='text-align:center; width:100%; color:#666;'>לא נמצאו תוצאות, נסה לחפש מילה אחרת.</h3>";
+                    } else {
+                        document.getElementById('loadMoreBtn').style.display = "none";
+                    }
+                    return;
+                }
+
+                renderProducts(products);
+                
+                // מציג את כפתור ה"הצג עוד" רק אם קיבלנו תוצאות
+                document.getElementById('loadMoreBtn').style.display = "block"; 
+            } catch (error) {
+                document.getElementById('loader').style.display = "none";
+                alert("אופס! משהו השתבש בחיבור לשרת. ודא שהכתובת בקוד מדויקת.");
+            }
+        }
+
+        function renderProducts(products) {
+            const resultsDiv = document.getElementById('results');
+            products.forEach(p => {
+                const title = p.product_title || "מוצר מעליאקספרס";
+                const img = p.product_main_image_url;
+                // משיכת מחיר, אם אין sale_price ננסה למשוך app_sale_price
+                let priceStr = p.target_app_sale_price || p.app_sale_price || p.target_sale_price || "";
+                // חיתוך טווח מחירים אם יש (לדוגמה 10-20 ש"ח) ומציג רק את המחיר ההתחלתי
+                priceStr = priceStr.toString().split("-")[0].trim();
+                const link = p.promotion_link;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <img src="${img}" alt="Product Image">
+                    <div class="card-content">
+                        <h3 class="card-title" title="${title}">${title}</h3>
+                        <div class="card-price">₪${priceStr}</div>
+                        <a href="${link}" target="_blank" class="buy-btn">לקנייה בהנחה</a>
+                    </div>
+                `;
+                resultsDiv.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
