@@ -62,8 +62,8 @@ export default {
         return price >= 10 && price <= 350 && p.sale_volume > 40;
       });
 
-      // 6. החזרת התוצאות לדף הנחיתה
-      return new Response(JSON.stringify(filteredProducts), {
+      // 6. החזרת התוצאות המלאות מה-API לבדיקת שגיאות (השינוי כאן - מחזיר את data)
+      return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
 
