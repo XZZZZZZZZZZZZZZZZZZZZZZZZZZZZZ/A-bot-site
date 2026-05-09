@@ -2,22 +2,22 @@ import crypto from 'node:crypto';
 
 export default {
   async fetch(request, env) {
-    // הגדרת CORS כדי שדף הנחיתה יוכל לדבר עם השרת שלנו
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
 
-    // טיפול בבקשות מקדימות (Preflight) של הדפדפן
+    // טיפול בבקשות מהדפדפן
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
 
     try {
-      // 1. קבלת מילת החיפוש מתוך כתובת ה-URL
       const { searchParams } = new URL(request.url);
       const query = searchParams.get('q');
+      // הגדרת עמוד: אם הלקוח לוחץ "עוד תוצאות", נבקש את עמוד 2, 3 וכו'
+      const page = searchParams.get('page') || "1"; 
 
       if (!query) {
         return new Response(JSON.stringify({ error: "אנא הזן מילת חיפוש" }), { 
@@ -26,7 +26,7 @@ export default {
         });
       }
 
-      // 2. הכנת הפרמטרים לעליאקספרס (כולל מיון לפי הכי נמכרים)
+      // הבקשה לעליאקספרס
       const params = {
         app_key: env.ALI_APP_KEY,
         method: "aliexpress.affiliate.product.query",
@@ -35,35 +35,29 @@ export default {
         v: "2.0",
         sign_method: "md5",
         keywords: query,
-        page_no: 1,
+        page_no: page, // מושך את העמוד הנכון
         tracking_id: env.ALI_TRACKING_ID,
         ship_to_country: "IL",
         target_currency: "ILS",
         target_language: "HE",
-        sort: "LAST_VOLUME_DESC" 
+        sort: "LAST_VOLUME_DESC" // מיון לפי הכי נמכרים תמיד
       };
 
-      // 3. יצירת החתימה (Sign) המאובטחת
       params.sign = generateSign(params, env.ALI_APP_SECRET);
 
-      // 4. שליחת הבקשה ל-API של עליאקספרס
       const url = new URL("https://api-sg.aliexpress.com/sync");
       Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
 
       const response = await fetch(url.toString(), { method: 'GET' });
       const data = await response.json();
       
-      const products = data?.aliexpress_affiliate_product_query_response?.resp_result?.result?.products?.product || [];
+      let products = data?.aliexpress_affiliate_product_query_response?.resp_result?.result?.products?.product || [];
 
-      // 5. סינון התוצאות (מחיר בין 10 ל-350, ומעל 40 רכישות)
-      const filteredProducts = products.filter(p => {
-        let priceStr = p.target_app_sale_price || "0";
-        const price = parseFloat(priceStr.toString().split("-")[0]);
-        return price >= 10 && price <= 350 && p.sale_volume > 40;
-      });
+      // חותכים את התוצאות כדי להחזיר בדיוק 10 מוצרים כמו שביקשת
+      products = products.slice(0, 10);
 
-      // 6. החזרת התוצאות המלאות מה-API לבדיקת שגיאות (השינוי כאן - מחזיר את data)
-      return new Response(JSON.stringify(data), {
+      // מחזירים את התשובה כרשימה נקייה לאתר שנעצב
+      return new Response(JSON.stringify(products), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
 
@@ -76,7 +70,6 @@ export default {
   }
 };
 
-// פונקציית עזר לייצור החתימה של עליאקספרס
 function generateSign(params, secret) {
   const sorted = Object.keys(params).sort();
   let base = secret;
