@@ -16,7 +16,6 @@ export default {
     try {
       const { searchParams } = new URL(request.url);
       const query = searchParams.get('q');
-      // הגדרת עמוד: אם הלקוח לוחץ "עוד תוצאות", נבקש את עמוד 2, 3 וכו'
       const page = searchParams.get('page') || "1"; 
 
       if (!query) {
@@ -35,12 +34,12 @@ export default {
         v: "2.0",
         sign_method: "md5",
         keywords: query,
-        page_no: page, // מושך את העמוד הנכון
+        page_no: page,
         tracking_id: env.ALI_TRACKING_ID,
         ship_to_country: "IL",
         target_currency: "ILS",
         target_language: "HE",
-        sort: "LAST_VOLUME_DESC" // מיון לפי הכי נמכרים תמיד
+        sort: "LAST_VOLUME_DESC" 
       };
 
       params.sign = generateSign(params, env.ALI_APP_SECRET);
@@ -51,13 +50,8 @@ export default {
       const response = await fetch(url.toString(), { method: 'GET' });
       const data = await response.json();
       
-      let products = data?.aliexpress_affiliate_product_query_response?.resp_result?.result?.products?.product || [];
-
-      // חותכים את התוצאות כדי להחזיר בדיוק 10 מוצרים כמו שביקשת
-      products = products.slice(0, 10);
-
-      // מחזירים את התשובה כרשימה נקייה לאתר שנעצב
-      return new Response(JSON.stringify(products), {
+      // === השינוי כאן: אנחנו מחזירים את התשובה הגולמית (data) כדי לראות מה השגיאה ===
+      return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
 
